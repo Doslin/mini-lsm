@@ -1,7 +1,6 @@
 // #![allow(dead_code)] // REMOVE THIS LINE after fully implementing this functionality
 
 use std::collections::HashMap;
-use std::mem;
 use std::ops::Bound;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicUsize;
@@ -16,6 +15,8 @@ use crate::compact::{
     CompactionController, CompactionOptions, LeveledCompactionController, LeveledCompactionOptions,
     SimpleLeveledCompactionController, SimpleLeveledCompactionOptions, TieredCompactionController,
 };
+use crate::iterators::merge_iterator::MergeIterator;
+use crate::iterators::StorageIterator;
 use crate::lsm_iterator::{FusedIterator, LsmIterator};
 use crate::manifest::Manifest;
 use crate::mem_table::MemTable;
@@ -333,15 +334,17 @@ impl LsmStorageInner {
         Ok(())
     }
     fn try_freeze(&self, estimated_size: usize) -> Result<()> {
-        if estimated_size >= self.options.target_sst_size {
-            let state_lock = self.state_lock.lock();
-            let gurad = self.state.read();
-            // 如果这个 memtable 已经被冻结了，就不需要再次冻结
-            if gurad.memtable.approximate_size() >= self.options.target_sst_size {
-                drop(gurad);
-                self.force_freeze_memtable(&state_lock)?;
-            }
-        }
+        // if estimated_size >= self.options.target_sst_size {
+        //     let state_lock = self.state_lock.lock();
+        //     let guard = self.state.read();
+        //     // the memtable could have already been frozen, check again to ensure we really need to freeze
+        //     if guard.memtable.approximate_size() >= self.options.target_sst_size {
+        //         drop(guard);
+        //         self.force_freeze_memtable(&state_lock)?;
+        //
+        //     }
+        //
+        // }
         Ok(())
     }
 
@@ -376,7 +379,7 @@ impl LsmStorageInner {
             let mut snapshot = guard.as_ref().clone();
             old_memtable = std::mem::replace(&mut snapshot.memtable, memtable);
             // 把旧的 memtable 加入到 imm_memtables
-            snapshot.imm_memtables.insert(0, old_memtable);
+            snapshot.imm_memtables.insert(0, old_memtable.clone());
             *guard = Arc::new(snapshot);
         }
 
@@ -396,9 +399,20 @@ impl LsmStorageInner {
     /// Create an iterator over a range of keys.
     pub fn scan(
         &self,
-        _lower: Bound<&[u8]>,
-        _upper: Bound<&[u8]>,
+        lower: Bound<&[u8]>,
+        upper: Bound<&[u8]>,
     ) -> Result<FusedIterator<LsmIterator>> {
-        unimplemented!()
+        let snapshot = {
+            let guard = self.state.read();
+            Arc::clone(&guard)
+        };
+        let mut memtable_iters = Vec::with_capacity(snapshot.imm_memtables.len() + 1);
+        memtable_iters.push(Box::new(snapshot.memtable.scan(lower, upper)));
+        for memtable in snapshot.imm_memtables.iter() {
+            memtable_iters.push(Box::new(memtable.scan(lower, upper)));
+        }
+        let iter = MergeIterator::create(memtable_iters);
+        // iter.value()
+        Ok(FusedIterator::new(LsmIterator::new(iter)?))
     }
 }

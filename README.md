@@ -49,10 +49,10 @@ To do this, use `cargo x sync`.
 
 ## Code Structure
 
-* mini-lsm: the final solution code for <= week 2
-* mini-lsm-mvcc: the final solution code for week 3 MVCC
-* mini-lsm-starter: the starter code
-* mini-lsm-book: the tutorial
+- mini-lsm: the final solution code for <= week 2
+- mini-lsm-mvcc: the final solution code for week 3 MVCC
+- mini-lsm-starter: the starter code
+- mini-lsm-book: the tutorial
 
 We have another repo mini-lsm-solution-checkpoint at [https://github.com/skyzh/mini-lsm-solution-checkpoint](https://github.com/skyzh/mini-lsm-solution-checkpoint). In this repo, each commit corresponds to a chapter in the tutorial. We will not update the solution checkpoint very often.
 
@@ -76,10 +76,10 @@ cargo run --bin compaction-simulator-mvcc-ref
 
 We have 3 weeks + 1 extra week (in progress) for this tutorial.
 
-* Week 1: Storage Format + Engine Skeleton
-* Week 2: Compaction and Persistence
-* Week 3: Multi-Version Concurrency Control
-* The Extra Week / Rest of Your Life: Optimizations (unlikely to be available in 2024...)
+- Week 1: Storage Format + Engine Skeleton
+- Week 2: Compaction and Persistence
+- Week 3: Multi-Version Concurrency Control
+- The Extra Week / Rest of Your Life: Optimizations (unlikely to be available in 2024...)
 
 ![Tutorial Roadmap](./mini-lsm-book/src/lsm-tutorial/00-full-overview.svg)
 
