@@ -118,8 +118,9 @@ impl<I: 'static + for<'a> StorageIterator<KeyType<'a> = KeySlice<'a>>> StorageIt
             }
         }
         current.1.next()?;
-        // 如果当前迭代器起有效，将其放回堆中
-        if current.1.is_valid() {
+
+        // 如果当前迭代器无效，则将其从堆中跳出并选择下一个迭代器
+        if !current.1.is_valid() {
             if let Some(iter) = self.iters.pop() {
                 *current = iter;
             }
