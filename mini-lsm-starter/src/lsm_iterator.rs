@@ -70,6 +70,9 @@ impl StorageIterator for LsmIterator {
     fn value(&self) -> &[u8] {
         self.inner.value()
     }
+    fn num_active_iterators(&self) -> usize {
+        self.inner.num_active_iterators()
+    }
 
     fn next(&mut self) -> Result<()> {
         self.next_inner()?;
@@ -127,5 +130,8 @@ impl<I: StorageIterator> StorageIterator for FusedIterator<I> {
             }
         }
         Ok(())
+    }
+    fn num_active_iterators(&self) -> usize {
+        self.iter.num_active_iterators()
     }
 }
