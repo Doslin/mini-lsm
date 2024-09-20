@@ -312,6 +312,10 @@ pub fn check_compaction_ratio(storage: Arc<MiniLsm>) {
             level0_file_num_compaction_trigger,
             max_levels,
         }) => {
+            println!(
+                "Simple compaction {} {}",
+                l0_sst_num, level0_file_num_compaction_trigger
+            );
             assert!(l0_sst_num < level0_file_num_compaction_trigger);
             assert!(level_size.len() <= max_levels);
             for idx in 1..level_size.len() {
